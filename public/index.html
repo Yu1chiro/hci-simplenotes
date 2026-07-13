@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HCI  Agent Note - Home Credit</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="https://ik.imagekit.io/yuidev25/Hera?updatedAt=1781458984059" type="image/png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+        .fade-in { animation: fadeIn 0.2s ease-in-out; }
+        .slide-up { animation: slideUp 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b91c1c; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+    <!-- HEADER HOME CREDIT THEME -->
+    <header class="bg-[#E3000F] text-white p-5 shadow-md rounded-b-3xl">
+        <div class="container mx-auto flex justify-between items-center max-w-5xl">
+            <h1 class="text-2xl font-extrabold tracking-wide drop-shadow-sm flex items-center gap-3">
+                <i class="fas fa-money-check-dollar text-3xl"></i>
+                HCI Agent Note
+            </h1>
+            <div class="flex gap-3">
+                <button onclick="openPromoModal()" class="bg-white/10 text-white px-5 py-2.5 rounded-full font-bold text-sm sm:text-base hover:bg-white/20 hover:scale-105 hover:shadow-lg transition-all border-2 border-white/50">
+                    <i class="fas fa-bullhorn mr-1"></i> Tambah Promo
+                </button>
+                <button onclick="startInputFlow()" class="bg-white text-[#E3000F] px-5 py-2.5 rounded-full font-bold text-sm sm:text-base hover:bg-gray-100 hover:scale-105 hover:shadow-lg transition-all border-2 border-white">
+                    <i class="fas fa-plus mr-1"></i> Tambah Produk
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 flex-grow flex flex-col gap-6 max-w-5xl mt-2 mb-6">
+        
+        <!-- BUTTON ACTIONS -->
+        <div class="flex flex-wrap gap-3">
+            <button onclick="copyText()" class="bg-[#E3000F] text-white border-2 border-[#E3000F] px-5 py-2.5 rounded-full text-sm font-bold hover:bg-[#c8000d] transition shadow-md flex items-center gap-2">
+                <i class="fas fa-paste"></i> Copy Format Promo
+            </button>
+            <button onclick="downloadJSON()" class="bg-white text-gray-600 border-2 border-gray-200 px-4 py-2.5 rounded-full text-sm font-bold hover:bg-gray-50 transition shadow-sm flex items-center gap-2">
+                <i class="fas fa-download"></i> Download JSON
+            </button>
+            <button onclick="copyJSON()" class="bg-white text-gray-600 border-2 border-gray-200 px-4 py-2.5 rounded-full text-sm font-bold hover:bg-gray-50 transition shadow-sm flex items-center gap-2">
+                <i class="fas fa-copy"></i> Copy JSON
+            </button>
+            <button onclick="confirmClearAll()" class="bg-white text-red-500 border-2 border-red-200 px-4 py-2.5 rounded-full text-sm font-bold hover:bg-red-50 transition shadow-sm ml-auto flex items-center gap-2">
+                <i class="fas fa-trash"></i> Hapus Semua
+            </button>
+        </div>
+
+        <!-- TABLE DATA -->
+        <div class="bg-white shadow-lg rounded-3xl overflow-x-auto border border-gray-100">
+            <table class="w-full text-left border-collapse min-w-[800px]">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 border-b-2 border-gray-200">
+                        <th class="p-4 text-base font-extrabold rounded-tl-3xl">Tipe & Spek Produk</th>
+                        <th class="p-4 text-base font-extrabold">Harga Cash</th>
+                        <th class="p-4 text-base font-extrabold">Rincian Cicilan</th>
+                        <th class="p-4 text-base font-extrabold">Keterangan Promo</th>
+                        <th class="p-4 text-base font-extrabold text-center rounded-tr-3xl">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-gray-100 text-base font-medium">
+                    </tbody>
+            </table>
+            
+            <div id="emptyState" class="hidden p-12 text-center flex flex-col items-center justify-center">
+                <i class="fas fa-mobile-screen-button text-gray-300 text-6xl mb-4"></i>
+                <p class="text-red-500 font-bold text-lg">Belum ada data Produk nih!</p>
+                <p class="text-gray-400 text-sm mt-1">Klik "Tambah Produk" di atas untuk mulai membuat list.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL INPUT Produk (Step 1-3) -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden fade-in relative border-t-8 border-[#E3000F] max-h-[95vh] overflow-y-auto">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 p-2 bg-gray-50 rounded-full transition">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+
+            <!-- INDICATORS -->
+            <div class="bg-gray-50 p-4 border-b border-gray-200 flex justify-center items-center gap-2 text-xs font-bold text-gray-400 flex-wrap">
+                <span id="step1Indicator" class="px-3 py-1 rounded-full transition-colors">1. Device</span>
+                <i class="fas fa-chevron-right text-[10px]"></i>
+                <span id="step2Indicator" class="px-3 py-1 rounded-full transition-colors">2. Harga</span>
+                <i class="fas fa-chevron-right text-[10px]"></i>
+                <span id="step3Indicator" class="px-3 py-1 rounded-full transition-colors">3. Cicilan</span>
+            </div>
+
+            <div class="p-8">
+                <!-- STEP 1: DEVICE INFO -->
+                <div id="step1" class="hidden slide-up">
+                    <label class="block text-base font-bold text-gray-800 mb-2"><i class="fas fa-mobile-screen text-[#E3000F] mr-2"></i>Tipe Produk / Nama Barang</label>
+                    <input type="text" id="inputTipe" class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl p-3 focus:outline-none focus:border-[#E3000F] text-base font-bold text-gray-800 mb-4 transition uppercase" placeholder="Contoh: REDMI 15C" autocomplete="off">
+                    
+                    <label class="block text-base font-bold text-gray-800 mb-2"><i class="fas fa-microchip text-[#E3000F] mr-2"></i>Spesifikasi (Ram/Rom)</label>
+                    <input type="text" id="inputSpek" class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl p-3 focus:outline-none focus:border-[#E3000F] text-base font-medium text-gray-700 mb-6 transition capitalize" placeholder="Contoh: Ram 8+8gb Rom 256gb" autocomplete="off">
+                    
+                    <button onclick="nextStep(2)" class="w-full bg-[#E3000F] text-white font-bold text-lg py-4 rounded-xl hover:bg-[#c8000d] transition shadow-md">Selanjutnya <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+
+                <!-- STEP 2: HARGA -->
+                <div id="step2" class="hidden slide-up">
+                    <label class="block text-base font-bold text-gray-800 mb-3"><i class="fas fa-tag text-[#E3000F] mr-2"></i>Harga Cash</label>
+                    <div class="relative mb-6">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 font-bold text-gray-500">Rp</span>
+                        <input type="text" id="inputHarga" class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-[#E3000F] text-xl font-bold text-gray-800 transition" placeholder="2.549.000" autocomplete="off">
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="goToStep(1)" class="w-1/3 bg-gray-200 text-gray-600 font-bold py-4 rounded-xl hover:bg-gray-300 transition"><i class="fas fa-arrow-left"></i></button>
+                        <button onclick="nextStep(3)" class="w-2/3 bg-[#E3000F] text-white font-bold text-lg py-4 rounded-xl hover:bg-[#c8000d] transition shadow-md">Selanjutnya <i class="fas fa-arrow-right ml-2"></i></button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: CICILAN -->
+                <div id="step3" class="hidden slide-up">
+                    <label class="block text-sm font-bold text-gray-800 mb-1"><i class="fas fa-calendar-days text-[#E3000F] mr-2"></i>Cicilan 12 Bulan</label>
+                    <div class="relative mb-3">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 font-bold text-gray-500 text-sm">Rp</span>
+                        <input type="text" id="inputC12" class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl py-3 pl-10 pr-3 focus:outline-none focus:border-[#E3000F] text-base font-bold text-gray-800 transition" placeholder="Kosongkan jika tidak ada" autocomplete="off">
+                    </div>
+                    
+                    <label class="block text-sm font-bold text-gray-800 mb-1"><i class="fas fa-calendar-days text-[#E3000F] mr-2"></i>Cicilan 14 Bulan</label>
+                    <div class="relative mb-3">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 font-bold text-gray-500 text-sm">Rp</span>
+                        <input type="text" id="inputC14" class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl py-3 pl-10 pr-3 focus:outline-none focus:border-[#E3000F] text-base font-bold text-gray-800 transition" placeholder="Kosongkan jika tidak ada" autocomplete="off">
+                    </div>
+                    
+                    <label class="block text-sm font-bold text-gray-800 mb-1"><i class="fas fa-calendar-days text-[#E3000F] mr-2"></i>Cicilan 15 Bulan</label>
+                    <div class="relative mb-6">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 font-bold text-gray-500 text-sm">Rp</span>
+                        <input type="text" id="inputC15" class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl py-3 pl-10 pr-3 focus:outline-none focus:border-[#E3000F] text-base font-bold text-gray-800 transition" placeholder="Kosongkan jika tidak ada" autocomplete="off">
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="goToStep(2)" class="w-1/3 bg-gray-200 text-gray-600 font-bold py-4 rounded-xl hover:bg-gray-300 transition"><i class="fas fa-arrow-left"></i></button>
+                        <button onclick="saveData()" class="w-2/3 bg-green-500 text-white font-bold text-lg py-4 rounded-xl hover:bg-green-600 transition shadow-md"><i class="fas fa-check-circle mr-2"></i> Simpan Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH PROMO (Berdiri Sendiri) -->
+    <div id="promoModalOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex justify-center items-center z-[55] p-4">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden fade-in relative border-t-8 border-green-500">
+            <button onclick="closePromoModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 p-2 bg-gray-50 rounded-full transition">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+
+            <div class="p-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-500 mr-3">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    Tambahkan Promo
+                </h3>
+
+                <label class="block text-base font-bold text-gray-800 mb-2">Pilih Model Barang</label>
+                <select id="selectPromoDevice" class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl p-3 focus:outline-none focus:border-green-500 text-base font-bold text-gray-800 mb-4 transition appearance-none cursor-pointer">
+                    <!-- Option akan digenerate otomatis lewat JS -->
+                </select>
+
+                <label class="block text-base font-bold text-gray-800 mb-2">Deskripsi Promo</label>
+                <textarea id="inputNewPromoDesc" rows="4" class="w-full bg-gray-50 border-2 border-gray-200 rounded-xl p-3 focus:outline-none focus:border-green-500 text-sm font-medium text-gray-700 mb-6 transition" placeholder="Contoh: Bunga 0% dan Tanpa DP khusus bulan ini..."></textarea>
+
+                <div class="flex gap-3">
+                    <button onclick="closePromoModal()" class="w-1/3 bg-gray-200 text-gray-600 font-bold py-4 rounded-xl hover:bg-gray-300 transition">Batal</button>
+                    <button onclick="savePromoData()" class="w-2/3 bg-green-500 text-white font-bold text-lg py-4 rounded-xl hover:bg-green-600 transition shadow-md"><i class="fas fa-check-circle mr-2"></i> Terapkan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRM DELETE -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex justify-center items-center z-[60] p-4 fade-in">
+        <div class="bg-white rounded-[2rem] shadow-xl w-full max-w-sm p-8 text-center border-t-8 border-red-500">
+            <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5 text-red-500 text-4xl shadow-inner">
+                <i class="fas fa-trash-can"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Hapus Data Produk ?</h3>
+            <p class="text-base text-gray-500 mb-8 font-medium">Yakin mau menghapus data ini dari daftar promo?</p>
+            <div class="flex gap-3">
+                <button onclick="cancelDelete()" class="w-1/2 py-3.5 rounded-xl bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 transition text-base">Batal</button>
+                <button onclick="executeDelete()" class="w-1/2 py-3.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition shadow-md text-base">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="clearAllConfirmModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex justify-center items-center z-[60] p-4 fade-in">
+        <div class="bg-white rounded-[2rem] shadow-xl w-full max-w-sm p-8 text-center border-t-8 border-red-600">
+            <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5 text-red-600 text-4xl shadow-inner">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Hapus SEMUA Data?</h3>
+            <p class="text-base text-gray-500 mb-8 font-medium">Ini akan menghapus semua list Produk dari tabel. Tindakan ini tidak bisa dibatalkan!</p>
+            <div class="flex gap-3">
+                <button onclick="cancelClearAll()" class="w-1/2 py-3.5 rounded-xl bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 transition text-base">Batal</button>
+                <button onclick="executeClearAll()" class="w-1/2 py-3.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition shadow-md text-base">Hapus Semua</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed top-6 right-6 flex flex-col gap-3 z-[70]"></div>
+
+    <footer class="text-center py-6 text-sm font-bold text-gray-400 mt-auto">
+        <p>© Home Credit Indonesia - Sales Agent Note</p>
+    </footer>
+
+    <script>
+        // State Management
+        let promoData = JSON.parse(localStorage.getItem('hc_agent_notes')) || [];
+        let currentEntry = { tipe: '', spek: '', harga: '', cicilan12: '', cicilan14: '', cicilan15: '', promoDesc: '' };
+        
+        let editIndex = null;
+        let deleteIndex = null;
+
+        // DOM Elements
+        const modalOverlay = document.getElementById('modalOverlay');
+        const promoModalOverlay = document.getElementById('promoModalOverlay');
+        const inputTipe = document.getElementById('inputTipe');
+        const inputSpek = document.getElementById('inputSpek');
+        const inputHarga = document.getElementById('inputHarga');
+        const inputC12 = document.getElementById('inputC12');
+        const inputC14 = document.getElementById('inputC14');
+        const inputC15 = document.getElementById('inputC15');
+        const selectPromoDevice = document.getElementById('selectPromoDevice');
+        const inputNewPromoDesc = document.getElementById('inputNewPromoDesc');
+
+        // FORMAT RUPIAH LOGIC
+        function formatRupiah(value) {
+            let number_string = value.replace(/[^,\d]/g, '').toString(),
+                split = number_string.split(','),
+                sisa = split[0].length % 3,
+                rupiah = split[0].substr(0, sisa),
+                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
+        }
+
+        // AUTO-FORMAT ON KEYUP
+        const rupiahInputs = [inputHarga, inputC12, inputC14, inputC15];
+        rupiahInputs.forEach(input => {
+            input.addEventListener('keyup', function(e) {
+                this.value = formatRupiah(this.value);
+            });
+        });
+
+        window.onload = () => {
+            renderTable();
+            // Start input secara default jika data masih kosong
+            if (promoData.length === 0) {
+                startInputFlow();
+            }
+        };
+
+        // ==========================
+        // FLOW MODAL TAMBAH Produk
+        // ==========================
+        function startInputFlow() {
+            editIndex = null;
+            currentEntry = { tipe: '', spek: '', harga: '', cicilan12: '', cicilan14: '', cicilan15: '', promoDesc: '' };
+            inputTipe.value = ''; inputSpek.value = '';
+            inputHarga.value = ''; inputC12.value = ''; inputC14.value = ''; inputC15.value = '';
+            
+            modalOverlay.classList.remove('hidden');
+            goToStep(1);
+        }
+
+        function closeModal() {
+            modalOverlay.classList.add('hidden');
+            editIndex = null;
+        }
+
+        function goToStep(step) {
+            ['step1', 'step2', 'step3'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            
+            ['step1', 'step2', 'step3'].forEach(id => {
+                document.getElementById(`${id}Indicator`).className = 'text-gray-400 px-3 py-1 rounded-full transition-colors';
+            });
+
+            document.getElementById(`step${step}`).classList.remove('hidden');
+            document.getElementById(`step${step}Indicator`).className = 'text-white bg-[#E3000F] px-3 py-1 rounded-full shadow-sm font-bold transition-colors';
+
+            if(step === 1) setTimeout(() => inputTipe.focus(), 100);
+            if(step === 2) setTimeout(() => inputHarga.focus(), 100);
+            if(step === 3) setTimeout(() => inputC12.focus(), 100);
+        }
+
+        function nextStep(step) {
+            if (step === 2) {
+                if (!inputTipe.value.trim()) {
+                    showToast('Nama Barang / Tipe Produk wajib diisi!', 'error');
+                    inputTipe.focus();
+                    return;
+                }
+                currentEntry.tipe = inputTipe.value.trim();
+                currentEntry.spek = inputSpek.value.trim();
+            } else if (step === 3) {
+                if (!inputHarga.value.trim()) {
+                    showToast('Harga Cash wajib diisi!', 'error');
+                    inputHarga.focus();
+                    return;
+                }
+                currentEntry.harga = `Rp ${inputHarga.value.trim()}`;
+            }
+            goToStep(step);
+        }
+
+        function saveData() {
+            currentEntry.cicilan12 = inputC12.value.trim() ? `Rp ${inputC12.value.trim()}` : '-';
+            currentEntry.cicilan14 = inputC14.value.trim() ? `Rp ${inputC14.value.trim()}` : '-';
+            currentEntry.cicilan15 = inputC15.value.trim() ? `Rp ${inputC15.value.trim()}` : '-';
+            
+            // Pertahankan promoDesc jika sedang mengedit
+            if (editIndex !== null && promoData[editIndex].promoDesc) {
+                currentEntry.promoDesc = promoData[editIndex].promoDesc;
+            }
+
+            try {
+                if (editIndex !== null) {
+                    promoData[editIndex] = {...currentEntry};
+                    showToast('Data berhasil diperbarui!', 'success');
+                    editIndex = null;
+                } else {
+                    promoData.push({...currentEntry});
+                    showToast('Data Gadget Tersimpan!', 'success');
+                }
+                
+                localStorage.setItem('hc_agent_notes', JSON.stringify(promoData));
+                renderTable();
+                closeModal();
+            } catch (error) {
+                showToast('Gagal menyimpan data!', 'error');
+            }
+        }
+
+        // ==========================
+        // FLOW MODAL TAMBAH PROMO
+        // ==========================
+        function openPromoModal() {
+            if (promoData.length === 0) {
+                return showToast('Belum ada data Barang! Tambah Produk terlebih dahulu.', 'error');
+            }
+            
+            selectPromoDevice.innerHTML = '<option value="">-- Pilih Barang --</option>';
+            // Inject options dari data tabel
+            promoData.forEach((item, index) => {
+                selectPromoDevice.innerHTML += `<option value="${index}">${item.tipe.toUpperCase()} - ${item.spek}</option>`;
+            });
+            
+            inputNewPromoDesc.value = '';
+            promoModalOverlay.classList.remove('hidden');
+            setTimeout(() => selectPromoDevice.focus(), 100);
+        }
+
+        function closePromoModal() {
+            promoModalOverlay.classList.add('hidden');
+        }
+
+        function savePromoData() {
+            const selectedIndex = selectPromoDevice.value;
+            const promoDesc = inputNewPromoDesc.value.trim();
+
+            if (selectedIndex === "") {
+                showToast('Silakan pilih barang terlebih dahulu!', 'error');
+                selectPromoDevice.focus();
+                return;
+            }
+
+            if (!promoDesc) {
+                showToast('Deskripsi promo tidak boleh kosong!', 'error');
+                inputNewPromoDesc.focus();
+                return;
+            }
+
+            try {
+                // Update data promo pada item yg dipilih
+                promoData[selectedIndex].promoDesc = promoDesc;
+                localStorage.setItem('hc_agent_notes', JSON.stringify(promoData));
+                
+                renderTable();
+                closePromoModal();
+                showToast('Promo berhasil ditambahkan ke barang!', 'success');
+            } catch (error) {
+                showToast('Gagal menyimpan promo!', 'error');
+            }
+        }
+
+        // ==========================
+        // DATA MANAGEMENT LOGIC
+        // ==========================
+        function editData(index) {
+            editIndex = index;
+            currentEntry = {...promoData[index]};
+            
+            inputTipe.value = currentEntry.tipe;
+            inputSpek.value = currentEntry.spek;
+            inputHarga.value = currentEntry.harga.replace('Rp ', '');
+            inputC12.value = currentEntry.cicilan12 !== '-' ? currentEntry.cicilan12.replace('Rp ', '') : '';
+            inputC14.value = currentEntry.cicilan14 !== '-' ? currentEntry.cicilan14.replace('Rp ', '') : '';
+            inputC15.value = currentEntry.cicilan15 !== '-' ? currentEntry.cicilan15.replace('Rp ', '') : '';
+            
+            modalOverlay.classList.remove('hidden');
+            goToStep(1);
+        }
+
+        function confirmDelete(index) {
+            deleteIndex = index;
+            document.getElementById('deleteConfirmModal').classList.remove('hidden');
+        }
+
+        function cancelDelete() {
+            deleteIndex = null;
+            document.getElementById('deleteConfirmModal').classList.add('hidden');
+        }
+
+        function executeDelete() {
+            if (deleteIndex !== null) {
+                promoData.splice(deleteIndex, 1);
+                localStorage.setItem('hc_agent_notes', JSON.stringify(promoData));
+                renderTable();
+                showToast('Data dihapus!', 'success');
+                deleteIndex = null;
+                document.getElementById('deleteConfirmModal').classList.add('hidden');
+            }
+        }
+
+        function confirmClearAll() {
+            if (promoData.length === 0) return showToast('Data sudah kosong!', 'error');
+            document.getElementById('clearAllConfirmModal').classList.remove('hidden');
+        }
+
+        function cancelClearAll() {
+            document.getElementById('clearAllConfirmModal').classList.add('hidden');
+        }
+
+        function executeClearAll() {
+            promoData = [];
+            localStorage.removeItem('hc_agent_notes');
+            renderTable();
+            showToast('Semua data berhasil dibersihkan!', 'success');
+            document.getElementById('clearAllConfirmModal').classList.add('hidden');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            tbody.innerHTML = '';
+            
+            if (promoData.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                for (let i = promoData.length - 1; i >= 0; i--) {
+                    const item = promoData[i];
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-red-50 transition duration-200 group';
+                    
+                    const promoText = item.promoDesc 
+                        ? `<div class="text-sm text-gray-700 bg-green-50 p-2 rounded border border-green-100">${item.promoDesc}</div>` 
+                        : `<span class="text-gray-400 text-sm">-</span>`;
+
+                    tr.innerHTML = `
+                        <td class="p-4 border-r border-gray-100">
+                            <div class="text-gray-800 font-extrabold text-lg uppercase">${item.tipe}</div>
+                            <div class="text-gray-500 text-sm mt-1 capitalize">${item.spek}</div>
+                        </td>
+                        <td class="p-4 border-r border-gray-100 text-[#E3000F] font-bold text-lg">${item.harga}</td>
+                        <td class="p-4 border-r border-gray-100 text-gray-700 text-sm leading-relaxed">
+                            <div><span class="font-bold text-gray-500">12 bln:</span> ${item.cicilan12}</div>
+                            <div><span class="font-bold text-gray-500">14 bln:</span> ${item.cicilan14}</div>
+                            <div><span class="font-bold text-gray-500">15 bln:</span> ${item.cicilan15}</div>
+                        </td>
+                        <td class="p-4 border-r border-gray-100 min-w-[200px]">
+                            ${promoText}
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex justify-center gap-2 opacity-80 group-hover:opacity-100 transition">
+                                <button onclick="editData(${i})" class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition shadow-sm border border-blue-100" title="Edit Data Produk">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button onclick="confirmDelete(${i})" class="w-10 h-10 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition shadow-sm border border-red-100" title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            }
+        }
+
+        // ==========================
+        // EXPORT LOGIC
+        // ==========================
+        function copyText() {
+            if (promoData.length === 0) return showToast('Belum ada data untuk di-copy', 'error');
+            
+            const textFormat = promoData.map(item => {
+                let baseText = `${item.tipe.toUpperCase()}\n${item.spek}\nHarga Cash : ${item.harga}\nCicilan 12 bulan : ${item.cicilan12}\nCicilan 14 bulan : ${item.cicilan14}\nCicilan 15 bulan : ${item.cicilan15}`;
+                
+                if(item.promoDesc) {
+                    baseText += `Promo Spesial : ${item.promoDesc}`;
+                }
+                return baseText;
+            }).join('\n\n');
+            
+            navigator.clipboard.writeText(textFormat)
+                .then(() => showToast('Format Promo Siap di-Share! 🚀', 'success'))
+                .catch(() => showToast('Gagal copy teks', 'error'));
+        }
+
+        function downloadJSON() {
+            if (promoData.length === 0) return showToast('Data kosong', 'error');
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(promoData, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "hc_agent_promo.json");
+            document.body.appendChild(dl); dl.click(); dl.remove();
+            showToast('JSON berhasil diunduh!', 'success');
+        }
+
+        function copyJSON() {
+            if (promoData.length === 0) return showToast('Data kosong', 'error');
+            navigator.clipboard.writeText(JSON.stringify(promoData, null, 2))
+                .then(() => showToast('JSON disalin ke clipboard!', 'success'));
+        }
+
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const baseClasses = "flex items-center px-6 py-4 rounded-xl shadow-2xl text-white text-sm font-bold slide-up border-l-4";
+            const colorClass = type === 'success' ? "bg-gray-800 border-green-500" : "bg-gray-800 border-red-500";
+            
+            const iconSvg = type === 'success' 
+                ? `<i class="fas fa-check-circle text-green-400 text-xl mr-3"></i>`
+                : `<i class="fas fa-exclamation-circle text-red-400 text-xl mr-3"></i>`;
+
+            toast.className = `${baseClasses} ${colorClass}`;
+            toast.innerHTML = `${iconSvg} <span>${message}</span>`;
+            
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.replace('slide-up', 'opacity-0');
+                toast.style.transition = 'opacity 0.4s ease';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        // Enter key support
+        inputTipe.addEventListener('keypress', function (e) { if (e.key === 'Enter') inputSpek.focus(); });
+        inputSpek.addEventListener('keypress', function (e) { if (e.key === 'Enter') nextStep(2); });
+        inputHarga.addEventListener('keypress', function (e) { if (e.key === 'Enter') nextStep(3); });
+        inputC12.addEventListener('keypress', function (e) { if (e.key === 'Enter') inputC14.focus(); });
+        inputC14.addEventListener('keypress', function (e) { if (e.key === 'Enter') inputC15.focus(); });
+        inputC15.addEventListener('keypress', function (e) { if (e.key === 'Enter') saveData(); });
+    </script>
+</body>
+</html>
